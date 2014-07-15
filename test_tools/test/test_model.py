@@ -1,13 +1,18 @@
 # coding: utf-8
 from django.db.models.fields import NOT_PROVIDED
-from django.test import TestCase
+from .test_base import ObjectWithFieldBaseTestCase
+from . import model_field_validators, model_option_validators
 from ..utils import Option, camelcase_to
+from django.db import models
+from .model_option_validators import NOT_PROVIDED_HELP_TEXT
 
 
-NOT_PROVIDED_HELP_TEXT = u''
+class ModelTestCase(ObjectWithFieldBaseTestCase):
 
-
-class ModelTestCase(TestCase):
+    SETTINGS_CONSTANT_NAME = 'TEST_MODEL_FIELD_VALIDATORS'
+    BUILT_IN_FIELDS = models
+    FIELD_VALIDATORS = model_field_validators
+    OPTION_VALIDATORS = model_option_validators
 
     @property
     def model(self):
@@ -34,10 +39,11 @@ class ModelTestCase(TestCase):
             'exemplo:\n'
             '    meta = {"ordering": ("campo",),}')
 
-    def validar_field(self, nome, tipo, **kwargs):
-        from django.db import models
+    def get_atributo(self, nome):
+        return self.model._meta.get_field(nome)
+
+    def validar_field(self, nome, field, **kwargs):
         from django.conf import settings
-        from . import field_validators, option_validators
 
         OPTIONS = [
             Option('null', False),
@@ -59,72 +65,12 @@ class ModelTestCase(TestCase):
             Option('validators', []),
         ]
 
-        try:
-            campo = self.model._meta.get_field(nome)
-        except NameError:
-            self.fail('Não existe nenhum campo no model com o nome %s' % nome)
-
-        if isinstance(tipo, basestring):
-            try:
-                tipo = getattr(models, tipo)
-            except AttributeError:
-                raise AttributeError(
-                    'O field "%s" não é padrão do django e nestes ' % tipo,
-                    'casos não é permitido referenciar ele apenas pelo nome. '
-                    'Importe ele e o passe como parametro no tipo no lugar de '
-                    'informar seu nome')
-
-        self.assertEqual(campo.__class__, tipo, (
-            'O campo %s não é do tipo %s' % (nome, tipo)))
-
-        if 'TEST_TOOLS_FIELD_VALIDATORS' in dir(settings) and \
-                tipo.__name__ in settings.TEST_TOOLS_VALIDATORS:
-            validacoes_feitas = \
-                settings.TEST_TOOLS_VALIDATORS[tipo.__name__](
-                    self, campo, **kwargs)
-        else:
-            validacoes_feitas = \
-                getattr(field_validators, 'field_%s' % tipo.__name__.lower())(
-                    self, campo, **kwargs)
-
-        for option in OPTIONS:
-
-            # Alguns fields possuem validações nas opções padrões do field base
-            # caso esta opção tenha sido validada dentro do field não devemos
-            # fazer a sua revalidação aqui
-            if not option.e_compativel_django() or validacoes_feitas and \
-                    option.nome in validacoes_feitas:
-                continue
-
-            # Algumas opções podem ter validações um pouco mais avançadas e
-            # caso esta seja uma delas irá chamar a função que irá fazer a
-            # validação.
-            # As funções seguem o padrão: def _validar_option_<<nome_da_opcao>>
-            try:
-                getattr(option_validators, 'option_%s' % option.nome)(
-                    self, campo, nome, **kwargs)
-            except (AttributeError, TypeError):
-                pass
-            else:
-                continue
-
-            # Caso a opção não tenha sido testada e nem exista uma função para
-            # fazer sua validação de forma avançada será feita uma siples
-            # validação de igualdade. Neste caso ele verifica se o usuário
-            # definiu algum valor para a opção, caso contrario busca o seu
-            # valor padrão e assim procede com a validação
-            valor = kwargs.get(option.nome) or option.default
-            field_option = getattr(campo, option.nome)
-            self.assertEqual(
-                field_option, valor,
-                'Opção %s do field %s deveria ser %s, mas é %s' % (
-                    option.nome, nome, valor, field_option
-                )
-            )
+        super(ModelTestCase, self).base_validar_field(
+            nome, field, self.model, OPTIONS, **kwargs)
 
     def validar_meta(self, **kwargs):
         from django.conf import settings
-        from . import meta_validators
+        from . import model_meta_validators
 
         # FIXME: Atualmente quando a pessoa não passa o app_label ele é
         # obtido através do proprio model, isto é a mesma coisa que não testar
@@ -162,7 +108,7 @@ class ModelTestCase(TestCase):
                 # As funções seguem o padrão: def _validar_meta_option_
                 # <<nome_da_opcao>>
                 try:
-                    getattr(meta_validators, 'meta_%s' % option.nome)(
+                    getattr(model_meta_validators, 'meta_%s' % option.nome)(
                         self, **kwargs)
                 except (AttributeError, TypeError):
                     pass
@@ -182,3 +128,7 @@ class ModelTestCase(TestCase):
             self.validar_field(**campo)
 
         self.validar_meta(**self.meta)
+
+    def test_validar_objetos(self):
+        super(ModelTestCase, self).test_validar_objetos(
+            nome_classe='ModelTestCase')

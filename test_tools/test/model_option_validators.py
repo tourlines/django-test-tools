@@ -1,7 +1,9 @@
 # coding: utf-8
 from django.db.models.fields import NOT_PROVIDED
-from .test_model import NOT_PROVIDED_HELP_TEXT
 from ..faults import TestAssertionError
+
+
+NOT_PROVIDED_HELP_TEXT = u''
 
 
 def option_error_messages(

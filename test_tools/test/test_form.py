@@ -1,8 +1,18 @@
 # coding: utf-8
-from django.test import TestCase
+from django.forms import fields
+from .test_base import ObjectWithFieldBaseTestCase
+from . import form_field_validators, form_option_validators
 
 
-class FormTestCase(TestCase):
+class FormTestCase(ObjectWithFieldBaseTestCase):
+
+    SETTINGS_CONSTANT_NAME = 'TEST_FORM_FIELD_VALIDATORS'
+    BUILT_IN_FIELDS = fields
+    FIELD_VALIDATORS = form_field_validators
+    OPTION_VALIDATORS = form_option_validators
+
+    def get_atributo(self, nome):
+        return self.form.base_fields[nome]
 
     @property
     def form(self):
@@ -22,26 +32,7 @@ class FormTestCase(TestCase):
             '         "tipo": CharField')
 
     def validar_field(self, nome, tipo):
-        from django.forms import fields
-
-        try:
-            field = self.form.base_fields[nome]
-        except KeyError:
-            self.fail('Não existe o campo %s dentro do form %s' % (
-                nome, self.form))
-
-        if isinstance(tipo, basestring):
-            try:
-                tipo = getattr(fields, tipo)
-            except AttributeError:
-                raise AttributeError(
-                    'O field "%s" não é padrão do django e nestes ' % tipo,
-                    'casos não é permitido referenciar ele apenas pelo nome. '
-                    'Importe ele e o passe como parametro no tipo no lugar de '
-                    'informar seu nome')
-
-        self.assertEqual(field.__class__, tipo, (
-            'O field %s não é do tipo %s' % (nome, tipo)))
+        super(FormTestCase, self).base_validar_field(nome, tipo, self.form, [])
 
     def validar(self):
         for campo in self.campos:
