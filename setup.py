@@ -7,6 +7,7 @@ setup(
     author=test_tools.__author__,
     version=test_tools.__version__,
     packages=['test_tools'],
+    include_package_data=True,
     description='',
     author_email='romulo.santos@outlook.com',
     url='https://github.com/dullaran/django-test-tools',
