@@ -170,3 +170,14 @@ def field_manytomanyfield(self, campo, model):
 
 def field_onetoonefield(self, campo, model):
     self.assertEqual(campo.related.parent_model, model)
+
+
+"""
+Django CMS plugins & fields:
+"""
+
+
+def field_filerimagefield(self, campo):
+    self.assertTrue(campo.db_index)
+
+    return ['db_index']

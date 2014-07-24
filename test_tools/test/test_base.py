@@ -120,8 +120,9 @@ class ObjectWithFieldBaseTestCase(TestCase):
                 del(field_options[option.nome])
 
         if self.SETTINGS_CONSTANT:
-            funcao_validadora = self.SETTINGS_CONSTANT[field.__name__]
-        else:
+            funcao_validadora = self.SETTINGS_CONSTANT.get(field.__name__)
+
+        if not self.SETTINGS_CONSTANT or not funcao_validadora:
             funcao_validadora = getattr(
                 self.FIELD_VALIDATORS, 'field_%s' % field.__name__.lower())
 

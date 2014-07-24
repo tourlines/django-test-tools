@@ -29,7 +29,7 @@ class ModelTestCase(ObjectWithFieldBaseTestCase):
             'detalhes):\n'
             '    campos = [{'
             '         "nome": "nome_campo",'
-            '         "tipo": CharField,'
+            '         "field": CharField,'
             '         "max_length": 32}]')
 
     @property
@@ -132,3 +132,18 @@ class ModelTestCase(ObjectWithFieldBaseTestCase):
     def test_validar_objetos(self):
         super(ModelTestCase, self).test_validar_objetos(
             nome_classe='ModelTestCase')
+
+
+class CMSPluginModelTestCase(ModelTestCase):
+
+    def validar(self):
+        from cms.models.pluginmodel import CMSPlugin
+
+        super(CMSPluginModelTestCase, self).validar()
+        self.assertTrue(issubclass(self.model, CMSPlugin), (
+            'O model %s não herda de CMSPlugin e por definição do CMS todos '
+            'os models de plugin devem herdar desta classe'))
+
+    def test_validar_objetos(self):
+        super(ModelTestCase, self).test_validar_objetos(
+            nome_classe='CMSPluginModelTestCase')
