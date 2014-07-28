@@ -152,8 +152,18 @@ class ObjectWithFieldBaseTestCase(TestCase):
             else:
                 continue
 
-            valor = kwargs.get(option.nome) or option.default
             field_option = getattr(campo, option.nome)
+            # Este if poderia ser escrito com um simples "valor = kwargs.get(
+            # option.nome) or option.default". Contudo a seguinte lógica
+            # impede que isto possa ser feito: o default de um Boolean pode ser
+            # false e isto faria com que o python ignorasse o argumento default
+            # dos kwargs e portanto mesmo que o usuário informasse que é false
+            # ele iria buscar o valor padrão da opção.
+            if option.nome in kwargs:
+                valor = kwargs[option.nome]
+            else:
+                valor = option.default
+
             self.assertEqual(
                 field_option, valor,
                 'Opção "%s" do field "%s" deveria ser "%s", mas é "%s"' % (
