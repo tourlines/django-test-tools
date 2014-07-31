@@ -17,7 +17,9 @@ def field_binaryfield(self, campo):
 
 
 def field_booleanfield(self, campo):
-    pass
+    self.assertTrue(campo.blank)
+
+    return ['blank']
 
 
 def field_charfield(self, campo, max_length):
