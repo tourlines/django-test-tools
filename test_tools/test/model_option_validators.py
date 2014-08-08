@@ -109,6 +109,9 @@ def option_verbose_name(
             campo.verbose_name, unicode(nome.replace('_', ' ')))
     elif isinstance(verbose_name, basestring):
         self.assertEqual(campo.verbose_name, unicode(verbose_name))
+    elif verbose_name.__class__.__name__ == '__proxy__':
+        # ugettext if
+        self.assertEqual(campo.verbose_name, verbose_name)
     else:
         self.fail(
             'O valor do verbose_name passado não é válido: "%s"' % (
@@ -126,6 +129,9 @@ def option_help_text(
         self.assertNotEqual(campo.help_text, NOT_PROVIDED_HELP_TEXT)
     elif isinstance(help_text, basestring):
         self.assertEqual(campo.help_text, unicode(help_text))
+    elif help_text.__class__.__name__ == '__proxy__':
+        # ugettext if
+        self.assertEqual(campo.help_text, help_text)
     else:
         self.fail(
             'O valor do help_text passado não é válido: "%s"' % (
