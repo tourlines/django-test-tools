@@ -111,7 +111,11 @@ def option_verbose_name(
         self.assertEqual(campo.verbose_name, unicode(verbose_name))
     elif verbose_name.__class__.__name__ == '__proxy__':
         # ugettext if
-        self.assertEqual(campo.verbose_name, verbose_name)
+        self.assertEqual(campo.verbose_name, verbose_name, (
+            'Nome definido "%s" é diferente do esperado "%s"'
+        ) % (
+            campo.verbose_name[0:], verbose_name[0:])
+        )
     else:
         self.fail(
             'O valor do verbose_name passado não é válido: "%s"' % (

@@ -4,6 +4,8 @@ from django.test import TestCase
 
 class ObjectWithFieldBaseTestCase(TestCase):
 
+    __is_custom_field = False
+
     @property
     def SETTINGS_CONSTANT_NAME(self):
         raise NotImplementedError(
@@ -95,6 +97,8 @@ class ObjectWithFieldBaseTestCase(TestCase):
                     'O field "%s" não é padrão do django e nestes ' % field,
                     'casos não é permitido referenciar ele apenas pelo nome. '
                     'Importe o field e o passe diretamente.')
+        else:
+            self.__is_custom_field = True
 
         return field
 
@@ -123,8 +127,15 @@ class ObjectWithFieldBaseTestCase(TestCase):
             funcao_validadora = self.SETTINGS_CONSTANT.get(field.__name__)
 
         if not self.SETTINGS_CONSTANT or not funcao_validadora:
-            funcao_validadora = getattr(
-                self.FIELD_VALIDATORS, 'field_%s' % field.__name__.lower())
+            try:
+                funcao_validadora = getattr(
+                    self.FIELD_VALIDATORS, 'field_%s' % field.__name__.lower())
+            except AttributeError as e:
+                if not self.__is_custom_field:
+                    raise e
+                else:
+                    print "WARING: Skipping all tests for field %s" % field
+                    return []
 
         return funcao_validadora(self, campo, **field_options) or []
 
