@@ -1,7 +1,8 @@
 # coding: utf-8
 from django.db.models.fields import NOT_PROVIDED
 from .test_base import ObjectWithFieldBaseTestCase
-from . import model_field_validators, model_option_validators
+from . import (
+    model_field_validators, model_option_validators, model_meta_validators)
 from ..utils import Option, camelcase_to
 from django.db import models
 from .model_option_validators import NOT_PROVIDED_HELP_TEXT
@@ -13,6 +14,7 @@ class ModelTestCase(ObjectWithFieldBaseTestCase):
     BUILT_IN_FIELDS = models
     FIELD_VALIDATORS = model_field_validators
     OPTION_VALIDATORS = model_option_validators
+    META_VALIDATORS = model_meta_validators
 
     @property
     def model(self):
@@ -20,24 +22,6 @@ class ModelTestCase(ObjectWithFieldBaseTestCase):
             'Defina qual model deseja testar criando uma variável na classe '
             'seguindo o exemplo:\n'
             '    model = <<MeuModel>>')
-
-    @property
-    def campos(self):
-        raise NotImplementedError(
-            'Crie uma lista de dicionario contendo a relação dos campos do '
-            'model a ser testado. Exemplo (Veja a docstring para mais '
-            'detalhes):\n'
-            '    campos = [{'
-            '         "nome": "nome_campo",'
-            '         "field": CharField,'
-            '         "max_length": 32}]')
-
-    @property
-    def meta(self):
-        raise NotImplementedError(
-            'Crie um dicionario contento todos os itens to meta seguindo o '
-            'exemplo:\n'
-            '    meta = {"ordering": ("campo",),}')
 
     def get_atributo(self, nome):
         return self.model._meta.get_field(nome)
@@ -70,7 +54,6 @@ class ModelTestCase(ObjectWithFieldBaseTestCase):
 
     def validar_meta(self, **kwargs):
         from django.conf import settings
-        from . import model_meta_validators
 
         # FIXME: Atualmente quando a pessoa não passa o app_label ele é
         # obtido através do proprio model, isto é a mesma coisa que não testar
@@ -99,35 +82,8 @@ class ModelTestCase(ObjectWithFieldBaseTestCase):
             Option('verbose_name_plural', '')
         ]
 
-        for option in OPTIONS:
-            if option.e_compativel_django():
-
-                # Algumas opções do meta, assim como dos fields, podem ter
-                # validações um pouco mais avançadas e devemos usar funções
-                # para isto
-                # As funções seguem o padrão: def _validar_meta_option_
-                # <<nome_da_opcao>>
-                try:
-                    getattr(model_meta_validators, 'meta_%s' % option.nome)(
-                        self, **kwargs)
-                except (AttributeError, TypeError):
-                    pass
-                else:
-                    continue
-
-                valor = kwargs.get(option.nome) or option.default
-                meta_option = getattr(self.model._meta, option.nome)
-                self.assertEqual(
-                    meta_option, valor, 'Opção %s deveria ser %s, mas é %s' % (
-                        option.nome, valor, meta_option
-                    )
-                )
-
-    def validar(self):
-        for campo in self.campos:
-            self.validar_field(**campo)
-
-        self.validar_meta(**self.meta)
+        super(ModelTestCase, self).base_validar_meta(
+            self.model, OPTIONS, **kwargs)
 
     def test_validar_objetos(self):
         super(ModelTestCase, self).test_validar_objetos(
