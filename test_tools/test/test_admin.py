@@ -8,7 +8,7 @@ class AdminTestCase(TestCase):
     @property
     def admin(self):
         raise NotImplementedError(
-            'Crie uma variável contendo o model que esta sendo testado')
+            'Crie uma variável contendo o admin que esta sendo testado')
 
     @property
     def model(self):

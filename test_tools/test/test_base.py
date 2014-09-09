@@ -58,6 +58,34 @@ class ObjectWithFieldBaseTestCase(TestCase):
         raise NotImplementedError(
             'Informe o modulo que estão as funções validadoras de opções!')
 
+    @property
+    def META_VALIDATORS(self):
+        """
+        Validadores para as opções avançadas do meta
+        SEE: self.FIELD_VALIDATORS e self.OPTION_VALIDATORS
+        """
+        raise NotImplementedError(
+            'Informe o modulo que estão as funções validadoras de opções '
+            'do meta!')
+
+    @property
+    def atributos(self):
+        raise NotImplementedError(
+            'Crie uma lista de dicionario contendo a relação dos campos do '
+            'model a ser testado. Exemplo (Veja a docstring para mais '
+            'detalhes):\n'
+            '    atributos = [{'
+            '         "nome": "nome_campo",'
+            '         "field": CharField,'
+            '         "max_length": 32}]')
+
+    @property
+    def meta(self):
+        raise NotImplementedError(
+            'Crie um dicionario contento todos os itens to meta seguindo o '
+            'exemplo:\n'
+            '    meta = {"ordering": ("campo",),}')
+
     def get_atributo(self, nome):
         raise NotImplementedError(
             'Dado um nome esta função retorna o campo do objeto '
@@ -185,8 +213,44 @@ class ObjectWithFieldBaseTestCase(TestCase):
     def validar_field(self, nome, field, **kwargs):
         raise NotImplementedError
 
-    def validar(self):
+    def base_validar_meta(self, objeto, options, **kwargs):
+        for option in options:
+            if option.e_compativel_django():
+
+                # Algumas opções do meta, assim como dos fields, podem ter
+                # validações um pouco mais avançadas e devemos usar funções
+                # para isto
+                # As funções seguem o padrão: def _validar_meta_option_
+                # <<nome_da_opcao>>
+                try:
+                    getattr(self.META_VALIDATORS, 'meta_%s' % option.nome)(
+                        self, **kwargs)
+                except (AttributeError, TypeError):
+                    pass
+                else:
+                    continue
+
+                valor = kwargs.get(option.nome) or option.default
+                # FIXME: Criar uma função igual ao get_field que retorna o meta
+                # do objeto
+                try:
+                    meta_option = getattr(objeto._meta, option.nome)
+                except:
+                    meta_option = getattr(objeto.Meta, option.nome)
+                self.assertEqual(
+                    meta_option, valor, 'Opção %s deveria ser %s, mas é %s' % (
+                        option.nome, valor, meta_option
+                    )
+                )
+
+    def validar_meta(self, nome, field, **kwargs):
         raise NotImplementedError
+
+    def validar(self):
+        for atributo in self.atributos:
+            self.validar_field(**atributo)
+
+        self.validar_meta(**self.meta)
 
     def test_validar_objetos(self, nome_classe='ObjectWithFieldBaseTestCase'):
         if not self.__class__.__name__ == nome_classe:
