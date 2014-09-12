@@ -24,15 +24,21 @@ class FormTestCase(ObjectWithFieldBaseTestCase):
             'seguindo o exemplo:\n'
             '    form = <<MeuForm>>')
 
-    def validar_field(self, nome, tipo):
-        self.base_validar_field(nome, tipo, self.form, [])
+    def validar_field(self, nome, field, **kwargs):
+        OPTIONS = [
+            Option('widget', None),
+        ]
+
+        self.base_validar_field(nome, field, self.form, OPTIONS, **kwargs)
 
     def validar_meta(self, **kwargs):
         OPTIONS = [
             Option('fields', []),
         ]
 
-        self.base_validar_meta(self.form, OPTIONS, **kwargs)
+        # Verica se o form possui meta implementado
+        if getattr(self.form, 'Meta', ''):
+            self.base_validar_meta(self.form, OPTIONS, **kwargs)
 
     def test_validar_objetos(self):
         super(FormTestCase, self).test_validar_objetos(
