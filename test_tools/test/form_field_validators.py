@@ -1,8 +1,8 @@
 # coding: utf-8
 
 
-def field_charfield(self, campo):
-    pass
+def field_charfield(self, campo, max_length=None):
+    self.assertEqual(campo.max_length, max_length)
 
 
 def field_datefield(self, campo):
