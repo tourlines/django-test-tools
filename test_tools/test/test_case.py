@@ -35,7 +35,7 @@ class _AssertRaisesContext(object):
             except AttributeError:
                 exc_name = str(self.expected)
             # Nesta etapa ele checa se o atributo "msg" foi definido e se sim
-            # exibe a mensagem armazenada no mesmo, caso contrario apenas 
+            # exibe a mensagem armazenada no mesmo, caso contrario apenas
             # segue o fluxo padrão da classe
             if self.msg:
                 raise self.failureException(self.msg)
@@ -56,6 +56,19 @@ class _AssertRaisesContext(object):
 
 
 class TestCaseBase(object):
+
+    def assertListItemsEqual(self, retornado, esperado, msg=''):
+        """
+        Implementação do ItemsEqual para lista de objetos. A função
+        padrão não funciona para alguns casos por motivos desconhecidos
+
+        # THANKS: Óscar López, http://stackoverflow.com/questions/17236801/how-
+            to-compare-two-list-object-instances-in-python
+        """
+        if not msg:
+            msg = 'Lista retornada não é igual a esperada!\n %s != %s' % (
+                retornado, esperado)
+        self.assertTrue(all(x in retornado for x in esperado), msg=msg)
 
     def assertRaisesWithMsg(
             self, excClass, callableObj=None, msg='', *args, **kwargs):
