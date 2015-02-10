@@ -66,17 +66,19 @@ class ModelTestCase(ObjectWithFieldBaseTestCase):
             Option('db_tablespace', settings.DEFAULT_TABLESPACE),
             Option('default_related_name', '%s_set' % (
                 camelcase_to(self.model.__name__, underscore=True)),
-                versao_minima=(1, 7, 0)),
+                versao_minima=(1, 8, 0)),
             Option('get_latest_by', None),
             Option('managed', True),
             Option('order_with_respect_to', None),
             Option('ordering', []),
             Option('permissions', []),
-            Option('default_permissions', (), versao_minima=(1, 7, 0)),
+            Option('default_permissions',
+                   ('add', 'change', 'delete'),
+                   versao_minima=(1, 7, 0)),
             Option('proxy', False),
             Option('select_on_save', False, versao_minima=(1, 6, 0)),
-            Option('unique_together', []),
-            Option('index_together', []),
+            Option('unique_together', ()),
+            Option('index_together', ()),
             Option('verbose_name', camelcase_to(
                 self.model.__name__, space=True)),
             Option('verbose_name_plural', '')
